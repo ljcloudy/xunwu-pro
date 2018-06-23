@@ -2,7 +2,9 @@ package com.cloudy.service.house;
 
 
 import com.cloudy.service.ServiceMultiResult;
-import com.cloudy.web.controller.house.SupportAddressDTO;
+import com.cloudy.web.dto.SubwayDTO;
+import com.cloudy.web.dto.SubwayStationDTO;
+import com.cloudy.web.dto.SupportAddressDTO;
 
 
 
@@ -12,4 +14,11 @@ import com.cloudy.web.controller.house.SupportAddressDTO;
 public interface AddressService {
 
     ServiceMultiResult<SupportAddressDTO> findAllCities();
+
+
+    ServiceMultiResult<SupportAddressDTO> findAllRegionsByCityName(String cityEnName);
+
+    ServiceMultiResult<SubwayDTO> findAllSubwayByCity(String cityEnName);
+
+    ServiceMultiResult<SubwayStationDTO> findAllSubwayStationBySubwayId(Long subway_id);
 }

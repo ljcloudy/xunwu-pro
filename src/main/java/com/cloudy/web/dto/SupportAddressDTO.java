@@ -1,4 +1,4 @@
-package com.cloudy.web.controller.house;
+package com.cloudy.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
