@@ -29,6 +29,26 @@
 
 	<dependencies>
 
+		<!-- ModelMapper Simple, Intelligent, Object Mapping. -->
+		<dependency>
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>18.0</version>
+		</dependency>
+
+		<!--添加七牛云SDK-->
+		<dependency>
+			<groupId>com.qiniu</groupId>
+			<artifactId>qiniu-java-sdk</artifactId>
+			<version>[7.2.0, 7.2.99]</version>
+		</dependency>
+
 		<!--jpa-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

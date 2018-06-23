@@ -1,15 +1,21 @@
 package com.cloudy.entity;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by ljy_cloudy on 2018/5/30.
  */
 @Entity
 @Table(name = "user")
-public class User implements Serializable {
+public class User implements Serializable, UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,6 +43,17 @@ public class User implements Serializable {
     //头像
     private String avatar;
 
+    @Transient
+    List<GrantedAuthority> grantedAuthorityList;
+
+    public List<GrantedAuthority> getGrantedAuthorityList() {
+        return grantedAuthorityList;
+    }
+
+    public void setGrantedAuthorityList(List<GrantedAuthority> grantedAuthorityList) {
+        this.grantedAuthorityList = grantedAuthorityList;
+    }
+
     public Long getId() {
         return id;
     }
@@ -53,8 +70,38 @@ public class User implements Serializable {
         this.name = name;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.grantedAuthorityList;
+    }
+
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.name;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     public void setPassword(String password) {
