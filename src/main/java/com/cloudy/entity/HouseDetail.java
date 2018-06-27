@@ -30,7 +30,7 @@ public class HouseDetail implements Serializable {
     @Column(name = "rent_way")
     private int rentWay;
 
-    @Column(name = "detail_address")
+    @Column(name = "address")
     private String detailAddress;
 
     @Column(name = "subway_line_id")

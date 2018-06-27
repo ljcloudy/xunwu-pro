@@ -18,7 +18,7 @@ public class House implements Serializable {
     private String title;
 
     @Column(name = "admin_id")
-    private String adminId;
+    private Long adminId;
 
     private int price;
 
@@ -83,11 +83,11 @@ public class House implements Serializable {
         this.title = title;
     }
 
-    public String getAdminId() {
+    public Long getAdminId() {
         return adminId;
     }
 
-    public void setAdminId(String adminId) {
+    public void setAdminId(Long adminId) {
         this.adminId = adminId;
     }
 

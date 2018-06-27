@@ -17,7 +17,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -103,5 +105,18 @@ public class AddressServiceImpl implements AddressService {
         }
 
         return result;
+    }
+
+    @Override
+    public Map<SupportAddress.Level, SupportAddressDTO> findCityAndRegion(String cityEnName, String regionEnName) {
+        Map<SupportAddress.Level, SupportAddressDTO> map = new HashMap<>();
+
+        SupportAddress city = supportAddressRepository.findByEnNameAndLevel(cityEnName, SupportAddress.Level.CITY.getValue());
+
+        SupportAddress region = supportAddressRepository.findByEnNameAndBelongTo(regionEnName, cityEnName);
+
+        map.put(SupportAddress.Level.CITY, modelMapper.map(city, SupportAddressDTO.class));
+        map.put(SupportAddress.Level.REGION, modelMapper.map(region, SupportAddressDTO.class));
+        return map;
     }
 }
