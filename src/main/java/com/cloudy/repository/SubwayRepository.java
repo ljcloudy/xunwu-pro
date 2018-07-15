@@ -15,4 +15,5 @@ public interface SubwayRepository  extends CrudRepository<Subway, Long> {
      * @return
      */
     List<Subway> findAllByCityEnName(String cityEnName);
+
 }

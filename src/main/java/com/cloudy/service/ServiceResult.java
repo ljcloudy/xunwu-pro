@@ -1,5 +1,7 @@
 package com.cloudy.service;
 
+import com.cloudy.web.dto.HouseDTO;
+
 /**
  * Created by ljy_cloudy on 2018/6/23.
  */
@@ -28,6 +30,13 @@ public class ServiceResult<T> {
         this.result = result;
     }
 
+    public static ServiceResult notFount() {
+        ServiceResult result = new ServiceResult();
+        result.setSuccess(false);
+        result.setMessage("not Found!");
+        return result;
+    }
+
     public boolean isSuccess() {
         return success;
     }
@@ -50,5 +59,16 @@ public class ServiceResult<T> {
 
     public void setResult(T result) {
         this.result = result;
+    }
+
+    public static <T> ServiceResult<T> of(T t) {
+        ServiceResult<T> result = new ServiceResult();
+        result.setSuccess(true);
+        result.setResult(t);
+        return result;
+    }
+
+    public static ServiceResult success() {
+        return new ServiceResult(true);
     }
 }

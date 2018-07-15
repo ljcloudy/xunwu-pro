@@ -7,6 +7,7 @@ import com.cloudy.repository.SubwayRepository;
 import com.cloudy.repository.SubwayStationRepository;
 import com.cloudy.repository.SupportAddressRepository;
 import com.cloudy.service.ServiceMultiResult;
+import com.cloudy.service.ServiceResult;
 import com.cloudy.web.dto.SubwayDTO;
 import com.cloudy.web.dto.SubwayStationDTO;
 import com.cloudy.web.dto.SupportAddressDTO;
@@ -118,5 +119,23 @@ public class AddressServiceImpl implements AddressService {
         map.put(SupportAddress.Level.CITY, modelMapper.map(city, SupportAddressDTO.class));
         map.put(SupportAddress.Level.REGION, modelMapper.map(region, SupportAddressDTO.class));
         return map;
+    }
+
+    @Override
+    public ServiceResult<SubwayDTO> findSubway(Long subwayLineId) {
+
+        Subway subway = subwayRepository.findOne(subwayLineId);
+        if(subway == null){
+            return ServiceResult.notFount();
+        }
+        SubwayDTO subwayDTO = modelMapper.map(subway, SubwayDTO.class);
+        return ServiceResult.of(subwayDTO);
+    }
+
+    @Override
+    public ServiceResult<SubwayStationDTO> findSubwayStation(Long subwayStationId) {
+        SubwayStation subwayStation = subwayStationRepository.findOne(subwayStationId);
+        SubwayStationDTO subwayStationDTO = modelMapper.map(subwayStation, SubwayStationDTO.class);
+        return ServiceResult.of(subwayStationDTO);
     }
 }

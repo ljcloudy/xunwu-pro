@@ -17,4 +17,11 @@ public class UserController {
     public String centerPage(){
         return "user/center";
     }
+
+
+
+//    @GetMapping("/user/center")
+//    public String centerPage2(){
+//        return "user/center";
+//    }
 }
