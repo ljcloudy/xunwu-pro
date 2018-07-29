@@ -30,7 +30,7 @@ public class ServiceResult<T> {
         this.result = result;
     }
 
-    public static ServiceResult notFount() {
+    public static ServiceResult notFound() {
         ServiceResult result = new ServiceResult();
         result.setSuccess(false);
         result.setMessage("not Found!");

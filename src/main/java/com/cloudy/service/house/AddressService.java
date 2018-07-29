@@ -30,4 +30,6 @@ public interface AddressService {
     ServiceResult<SubwayDTO> findSubway(Long subwayLineId);
 
     ServiceResult<SubwayStationDTO> findSubwayStation(Long subwayStationId);
+
+    ServiceResult<SupportAddressDTO> findCity(String cityEnName);
 }

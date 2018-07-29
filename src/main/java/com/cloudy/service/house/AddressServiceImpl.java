@@ -126,7 +126,7 @@ public class AddressServiceImpl implements AddressService {
 
         Subway subway = subwayRepository.findOne(subwayLineId);
         if(subway == null){
-            return ServiceResult.notFount();
+            return ServiceResult.notFound();
         }
         SubwayDTO subwayDTO = modelMapper.map(subway, SubwayDTO.class);
         return ServiceResult.of(subwayDTO);
@@ -137,5 +137,20 @@ public class AddressServiceImpl implements AddressService {
         SubwayStation subwayStation = subwayStationRepository.findOne(subwayStationId);
         SubwayStationDTO subwayStationDTO = modelMapper.map(subwayStation, SubwayStationDTO.class);
         return ServiceResult.of(subwayStationDTO);
+    }
+
+    @Override
+    public ServiceResult<SupportAddressDTO> findCity(String cityEnName) {
+        if (cityEnName == null) {
+            return ServiceResult.notFound();
+        }
+
+        SupportAddress supportAddress = supportAddressRepository.findByEnNameAndLevel(cityEnName, SupportAddress.Level.CITY.getValue());
+        if (supportAddress == null) {
+            return ServiceResult.notFound();
+        }
+
+        SupportAddressDTO addressDTO = modelMapper.map(supportAddress, SupportAddressDTO.class);
+        return ServiceResult.of(addressDTO);
     }
 }

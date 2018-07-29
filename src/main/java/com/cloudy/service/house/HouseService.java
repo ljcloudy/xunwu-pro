@@ -5,6 +5,9 @@ import com.cloudy.service.ServiceResult;
 import com.cloudy.web.dto.HouseDTO;
 import com.cloudy.web.form.DatatableSearch;
 import com.cloudy.web.form.HouseForm;
+import com.cloudy.web.form.RentSearch;
+
+import java.util.List;
 
 /**
  * Created by ljy_cloudy on 2018/6/23.
@@ -67,4 +70,13 @@ public interface HouseService {
      * @return
      */
     ServiceResult updateStatus(Long id, int status);
-}
+
+    /**
+     * 查询房屋信息
+     * @param rentSearch
+     * @return
+     */
+    ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);
+
+
+ }

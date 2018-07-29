@@ -4,7 +4,10 @@ import com.cloudy.entity.Role;
 import com.cloudy.entity.User;
 import com.cloudy.repository.RoleRepository;
 import com.cloudy.repository.UserRepository;
+import com.cloudy.service.ServiceResult;
 import com.cloudy.service.UserService;
+import com.cloudy.web.dto.UserDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,6 +29,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
     public User findByName(String name) {
@@ -43,5 +48,15 @@ public class UserServiceImpl implements UserService {
         roleList.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
         user.setGrantedAuthorityList(authorities);
         return user;
+    }
+
+    @Override
+    public ServiceResult<UserDTO> findById(Long userId) {
+        User user = userRepository.findOne(userId);
+        if (user == null) {
+            return ServiceResult.notFound();
+        }
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        return ServiceResult.of(userDTO);
     }
 }
