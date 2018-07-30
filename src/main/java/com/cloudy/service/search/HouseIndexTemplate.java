@@ -49,14 +49,14 @@ public class HouseIndexTemplate implements Serializable {
 
     private List<String> tags;
 
-    private List<HouseSuggest> houseSuggestList;
+    private List<HouseSuggest> suggest;
 
-    public List<HouseSuggest> getHouseSuggestList() {
-        return houseSuggestList;
+    public List<HouseSuggest> getSuggest() {
+        return suggest;
     }
 
-    public void setHouseSuggestList(List<HouseSuggest> houseSuggestList) {
-        this.houseSuggestList = houseSuggestList;
+    public void setSuggest(List<HouseSuggest> suggest) {
+        this.suggest = suggest;
     }
 
     public Long getHouseId() {

@@ -339,7 +339,7 @@ public class SearchServiceImpl implements SearchService {
         suggest.setInput(indexTemplate.getDistrict());
         houseSuggestList.add(suggest);
 
-        indexTemplate.setHouseSuggestList(houseSuggestList);
+        indexTemplate.setSuggest(houseSuggestList);
         return true;
     }
 }
