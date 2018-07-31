@@ -24,4 +24,20 @@ public interface SearchService {
      */
     ServiceResult<List<String>> suggest(String prefix);
 
+    /**
+     * 统计小区房源
+     * @param cityEnName
+     * @param regionEnName
+     * @param district
+     * @return
+     */
+    ServiceResult<Long> aggregateDistrictHouse(String cityEnName, String regionEnName, String district);
+
+    /**
+     * 地图聚合
+     * @param cityEnName
+     * @return
+     */
+    ServiceMultiResult<HouseBucketDTO> mapAggregate(String cityEnName);
+
 }

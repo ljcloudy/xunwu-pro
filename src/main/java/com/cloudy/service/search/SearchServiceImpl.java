@@ -31,6 +31,10 @@ import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -303,6 +307,63 @@ public class SearchServiceImpl implements SearchService {
             }
         }
         return ServiceResult.of(Lists.newArrayList(suggestSet.toArray(new String[]{})));
+    }
+
+    @Override
+    public ServiceResult<Long> aggregateDistrictHouse(String cityEnName, String regionEnName, String district) {
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME, cityEnName))
+                .filter(QueryBuilders.termQuery(HouseIndexKey.REGION_EN_NAME, regionEnName))
+                .filter(QueryBuilders.termQuery(HouseIndexKey.DISTRICT, district));
+
+        SearchRequestBuilder requestBuilder = this.client.prepareSearch(INDEX_NAME)
+                .setTypes(INDEX_TYPE)
+                .setQuery(boolQueryBuilder)
+                .addAggregation(
+                        AggregationBuilders.terms(HouseIndexKey.AGG_DISTRICT)
+                                .field(HouseIndexKey.DISTRICT)
+                )
+                .setSize(0);
+        LOGGER.debug(requestBuilder.toString());
+        SearchResponse response = requestBuilder.get();
+        if (response.status() == RestStatus.OK) {
+            Terms terms = response.getAggregations().get(HouseIndexKey.AGG_DISTRICT);
+            if (terms.getBuckets() != null && !terms.getBuckets().isEmpty()) {
+                return ServiceResult.of(terms.getBucketByKey(district).getDocCount());
+            }
+        } else {
+            LOGGER.warn("Failed to Aggregate for " + HouseIndexKey.AGG_DISTRICT);
+        }
+        return ServiceResult.of(0L);
+    }
+
+    @Override
+    public ServiceMultiResult<HouseBucketDTO> mapAggregate(String cityEnName) {
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME, cityEnName));
+
+        TermsAggregationBuilder aggregationBuilder = AggregationBuilders.terms(HouseIndexKey.AGG_REGION)
+                .field(HouseIndexKey.REGION_EN_NAME);
+
+        SearchRequestBuilder requestBuilder = this.client.prepareSearch(INDEX_NAME)
+                .setTypes(INDEX_TYPE)
+                .setQuery(boolQueryBuilder)
+                .addAggregation(aggregationBuilder);
+
+        LOGGER.debug(requestBuilder.toString());
+
+        SearchResponse response = requestBuilder.get();
+        List<HouseBucketDTO> bucketDTOList = new ArrayList<>();
+        if (response.status() != RestStatus.OK) {
+            LOGGER.warn("aggregate status is not ok for" + requestBuilder);
+            return new ServiceMultiResult<>(0, bucketDTOList);
+        } else {
+            Terms terms = response.getAggregations().get(HouseIndexKey.AGG_REGION);
+            for (Terms.Bucket bucket : terms.getBuckets()) {
+                bucketDTOList.add(new HouseBucketDTO(bucket.getKeyAsString(), bucket.getDocCount()));
+            }
+        }
+        return new ServiceMultiResult<>(Math.toIntExact(response.getHits().getTotalHits()), bucketDTOList);
     }
 
     private boolean updateSuggest(HouseIndexTemplate indexTemplate) {

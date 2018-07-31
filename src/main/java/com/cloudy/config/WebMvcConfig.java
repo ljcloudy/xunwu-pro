@@ -23,6 +23,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter implements Application
     private ApplicationContext applicationContext;
 
 
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
@@ -34,6 +35,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter implements Application
         SpringResourceTemplateResolver templateResolver = new SpringResourceTemplateResolver();
         templateResolver.setApplicationContext(applicationContext);
         templateResolver.setCharacterEncoding("UTF-8");
+        templateResolver.setCacheable(false);
         return templateResolver;
     }
 

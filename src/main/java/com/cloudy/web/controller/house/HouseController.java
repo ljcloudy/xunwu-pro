@@ -8,6 +8,7 @@ import com.cloudy.service.ServiceResult;
 import com.cloudy.service.UserService;
 import com.cloudy.service.house.AddressService;
 import com.cloudy.service.house.HouseService;
+import com.cloudy.service.search.HouseBucketDTO;
 import com.cloudy.service.search.SearchService;
 import com.cloudy.web.dto.*;
 import com.cloudy.web.form.RentSearch;
@@ -162,8 +163,8 @@ public class HouseController {
         model.addAttribute("agent", userDTOServiceResult.getResult());
         model.addAttribute("house", houseDTO);
 
-//        ServiceResult<Long> aggResult = searchService.aggregateDistrictHouse(city.getEnName(), region.getEnName(), houseDTO.getDistrict());
-//        model.addAttribute("houseCountInDistrict", aggResult.getResult());
+        ServiceResult<Long> aggResult = searchService.aggregateDistrictHouse(city.getEnName(), region.getEnName(), houseDTO.getDistrict());
+        model.addAttribute("houseCountInDistrict", aggResult.getResult());
 
         return "house-detail";
     }
@@ -179,7 +180,30 @@ public class HouseController {
         return ApiResponse.ofSuccess(suggest);
     }
 
+    @GetMapping("rent/house/map")
+    public String rentMapPage(@RequestParam(value = "cityEnName") String cityEnName,
+                              Model model,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        ServiceResult<SupportAddressDTO> city = addressService.findCity(cityEnName);
+        if (!city.isSuccess()) {
+            redirectAttributes.addAttribute("msg", "must_chose_city");
+            return "redirect:/index";
+        } else {
+            session.setAttribute("cityName", cityEnName);
+            model.addAttribute("city", city.getResult());
+        }
 
+        ServiceMultiResult<SupportAddressDTO> regions = addressService.findAllRegionsByCityName(cityEnName);
+
+
+        ServiceMultiResult<HouseBucketDTO> serviceResult = searchService.mapAggregate(cityEnName);
+
+        model.addAttribute("aggData", serviceResult.getResult());
+        model.addAttribute("total", serviceResult.getTotal());
+        model.addAttribute("regions", regions.getResult());
+        return "rent-map";
+    }
 
 
 }
