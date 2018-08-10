@@ -2,6 +2,7 @@ package com.cloudy.service.search;
 
 import com.cloudy.service.ServiceMultiResult;
 import com.cloudy.service.ServiceResult;
+import com.cloudy.web.form.MapSearch;
 import com.cloudy.web.form.RentSearch;
 
 import java.util.List;
@@ -40,4 +41,7 @@ public interface SearchService {
      */
     ServiceMultiResult<HouseBucketDTO> mapAggregate(String cityEnName);
 
+    ServiceMultiResult<Long> mapQuery(MapSearch mapSearch);
+
+    ServiceMultiResult<Long> mapQuery(String cityEnName, String orderBy, String orderDirection, int start, int size);
 }

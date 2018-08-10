@@ -13,6 +13,7 @@ import com.cloudy.web.dto.HouseDetailDTO;
 import com.cloudy.web.dto.HousePictureDTO;
 import com.cloudy.web.form.DatatableSearch;
 import com.cloudy.web.form.HouseForm;
+import com.cloudy.web.form.MapSearch;
 import com.cloudy.web.form.RentSearch;
 import com.google.common.collect.Maps;
 import com.qiniu.common.QiniuException;
@@ -341,6 +342,30 @@ public class HouseServiceImpl implements HouseService {
         return simpleQuery(rentSearch);
     }
 
+    @Override
+    public ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch) {
+        ServiceMultiResult<Long> serviceMultiResult = searchService.mapQuery(mapSearch.getCityEnName(),
+                mapSearch.getOrderBy(),
+                mapSearch.getOrderDirection(),
+                mapSearch.getStart(),
+                mapSearch.getSize());
+        if (serviceMultiResult.getTotal() == 0) {
+            return new ServiceMultiResult<>(0, new ArrayList<>());
+        }
+        List<HouseDTO> houseDTOList = wrapperHouseResult(serviceMultiResult.getResult());
+        return new ServiceMultiResult<>(serviceMultiResult.getTotal(), houseDTOList);
+    }
+
+    @Override
+    public ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch) {
+        ServiceMultiResult<Long> serviceMultiResult = searchService.mapQuery(mapSearch);
+        if (serviceMultiResult.getTotal() == 0) {
+            return new ServiceMultiResult<>(0, new ArrayList<>());
+        }
+        List<HouseDTO> houseDTOList = wrapperHouseResult(serviceMultiResult.getResult());
+        return new ServiceMultiResult<>(serviceMultiResult.getTotal(), houseDTOList);
+    }
+
 
     private List<HouseDTO> wrapperHouseResult(List<Long> houseIds) {
         List<HouseDTO> result = new ArrayList<>();
@@ -353,7 +378,7 @@ public class HouseServiceImpl implements HouseService {
             idToHouseMap.put(house.getId(), houseDTO);
         });
 
-        wrapperHouseList(houseIds,idToHouseMap);
+        wrapperHouseList(houseIds, idToHouseMap);
         //矫正顺序
         for (Long houseId : houseIds) {
             result.add(idToHouseMap.get(houseId));

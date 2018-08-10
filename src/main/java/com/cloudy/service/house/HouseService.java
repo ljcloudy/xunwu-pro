@@ -5,6 +5,7 @@ import com.cloudy.service.ServiceResult;
 import com.cloudy.web.dto.HouseDTO;
 import com.cloudy.web.form.DatatableSearch;
 import com.cloudy.web.form.HouseForm;
+import com.cloudy.web.form.MapSearch;
 import com.cloudy.web.form.RentSearch;
 
 import java.util.List;
@@ -79,4 +80,7 @@ public interface HouseService {
     ServiceMultiResult<HouseDTO> query(RentSearch rentSearch);
 
 
- }
+    ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch);
+
+    ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch);
+}
