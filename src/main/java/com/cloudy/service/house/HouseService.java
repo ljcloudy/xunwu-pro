@@ -1,13 +1,17 @@
 package com.cloudy.service.house;
 
+import com.cloudy.base.HouseSubscribeStatus;
 import com.cloudy.service.ServiceMultiResult;
 import com.cloudy.service.ServiceResult;
 import com.cloudy.web.dto.HouseDTO;
+import com.cloudy.web.dto.HouseSubscribeDTO;
 import com.cloudy.web.form.DatatableSearch;
 import com.cloudy.web.form.HouseForm;
 import com.cloudy.web.form.MapSearch;
 import com.cloudy.web.form.RentSearch;
+import org.springframework.data.util.Pair;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -83,4 +87,46 @@ public interface HouseService {
     ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch);
 
     ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch);
+
+
+    /**
+     * 加入预约清单
+     * @param houseId
+     * @return
+     */
+    ServiceResult addSubscribeOrder(Long houseId);
+
+    /**
+     * 获取对应状态的预约列表
+     */
+    ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> querySubscribeList(HouseSubscribeStatus status, int start, int size);
+
+    /**
+     * 预约看房时间
+     * @param houseId
+     * @param orderTime
+     * @param telephone
+     * @param desc
+     * @return
+     */
+    ServiceResult subscribe(Long houseId, Date orderTime, String telephone, String desc);
+
+    /**
+     * 取消预约
+     * @param houseId
+     * @return
+     */
+    ServiceResult cancelSubscribe(Long houseId);
+
+    /**
+     * 管理员查询预约信息接口
+     * @param start
+     * @param size
+     */
+    ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> findSubscribeList(int start, int size);
+
+    /**
+     * 完成预约
+     */
+    ServiceResult finishSubscribe(Long houseId);
 }

@@ -7,6 +7,7 @@ import com.cloudy.base.HouseStatus;
 import com.cloudy.entity.SupportAddress;
 import com.cloudy.service.ServiceMultiResult;
 import com.cloudy.service.ServiceResult;
+import com.cloudy.service.UserService;
 import com.cloudy.service.house.AddressService;
 import com.cloudy.service.house.HouseService;
 import com.cloudy.service.house.QiNiuService;
@@ -16,6 +17,7 @@ import com.cloudy.web.form.HouseForm;
 import com.google.gson.Gson;
 import com.qiniu.http.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -41,9 +43,10 @@ public class AdminController {
 
     @Autowired
     private AddressService addressService;
-
     @Autowired
     private HouseService houseService;
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private Gson gson;
@@ -301,6 +304,56 @@ public class AdminController {
             return ApiResponse.ofSuccess(null);
         }
         return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(),result.getMessage());
+    }
+
+    @GetMapping("admin/house/subscribe")
+    public String houseSubscribe() {
+        return "admin/subscribe";
+    }
+
+    @GetMapping("admin/house/subscribe/list")
+    @ResponseBody
+    public ApiResponse subscribeList(@RequestParam(value = "draw") int draw,
+                                     @RequestParam(value = "start") int start,
+                                     @RequestParam(value = "length") int size) {
+        ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> result = houseService.findSubscribeList(start, size);
+
+        ApiDataTableResponse response = new ApiDataTableResponse(ApiResponse.Status.SUCCESS);
+        response.setData(result.getResult());
+        response.setDraw(draw);
+        response.setRecordsFiltered(result.getTotal());
+        response.setRecordsTotal(result.getTotal());
+        return response;
+    }
+
+    @GetMapping("admin/user/{userId}")
+    @ResponseBody
+    public ApiResponse getUserInfo(@PathVariable(value = "userId") Long userId) {
+        if (userId == null || userId < 1) {
+            return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+
+        ServiceResult<UserDTO> serviceResult = userService.findById(userId);
+        if (!serviceResult.isSuccess()) {
+            return ApiResponse.ofStatus(ApiResponse.Status.NOT_FOUND);
+        } else {
+            return ApiResponse.ofSuccess(serviceResult.getResult());
+        }
+    }
+
+    @PostMapping("admin/finish/subscribe")
+    @ResponseBody
+    public ApiResponse finishSubscribe(@RequestParam(value = "house_id") Long houseId) {
+        if (houseId < 1) {
+            return ApiResponse.ofStatus(ApiResponse.Status.BAD_REQUEST);
+        }
+
+        ServiceResult serviceResult = houseService.finishSubscribe(houseId);
+        if (serviceResult.isSuccess()) {
+            return ApiResponse.ofSuccess("");
+        } else {
+            return ApiResponse.ofMessage(ApiResponse.Status.BAD_REQUEST.getCode(), serviceResult.getMessage());
+        }
     }
 
 

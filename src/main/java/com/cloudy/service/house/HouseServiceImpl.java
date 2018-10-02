@@ -2,6 +2,7 @@ package com.cloudy.service.house;
 
 import com.cloudy.base.HouseSort;
 import com.cloudy.base.HouseStatus;
+import com.cloudy.base.HouseSubscribeStatus;
 import com.cloudy.base.LoginUserUtil;
 import com.cloudy.entity.*;
 import com.cloudy.repository.*;
@@ -11,6 +12,7 @@ import com.cloudy.service.search.SearchService;
 import com.cloudy.web.dto.HouseDTO;
 import com.cloudy.web.dto.HouseDetailDTO;
 import com.cloudy.web.dto.HousePictureDTO;
+import com.cloudy.web.dto.HouseSubscribeDTO;
 import com.cloudy.web.form.DatatableSearch;
 import com.cloudy.web.form.HouseForm;
 import com.cloudy.web.form.MapSearch;
@@ -26,6 +28,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -49,15 +52,14 @@ public class HouseServiceImpl implements HouseService {
 
     @Autowired
     private HouseRepository houseRepository;
-
     @Autowired
     private HouseDetailRepository houseDetailRepository;
-
     @Autowired
     private HousePictureRepository housePictureRepository;
-
     @Autowired
     private HouseTagRepository houseTagRepository;
+    @Autowired
+    private HouseSubscribeRespository subscribeRespository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -230,6 +232,12 @@ public class HouseServiceImpl implements HouseService {
                     .collect(Collectors.toList());
             houseDTO.setPictures(housePictureDTOS);
         }
+        if (LoginUserUtil.getLoginUserId() > 0) { // 已登录用户
+            HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(house.getId(), LoginUserUtil.getLoginUserId());
+            if (subscribe != null) {
+                houseDTO.setSubscribeStatus(subscribe.getStatus());
+            }
+        }
 
         return ServiceResult.of(houseDTO);
     }
@@ -364,6 +372,132 @@ public class HouseServiceImpl implements HouseService {
         }
         List<HouseDTO> houseDTOList = wrapperHouseResult(serviceMultiResult.getResult());
         return new ServiceMultiResult<>(serviceMultiResult.getTotal(), houseDTOList);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult addSubscribeOrder(Long houseId) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(houseId, userId);
+        if (subscribe != null) {
+            return new ServiceResult(false, "已加入预约");
+        }
+
+        House house = houseRepository.findOne(houseId);
+        if (house == null) {
+            return new ServiceResult(false, "查无此房");
+        }
+
+        subscribe = new HouseSubscribe();
+        Date now = new Date();
+        subscribe.setCreateTime(now);
+        subscribe.setLastUpdateTime(now);
+        subscribe.setUserId(userId);
+        subscribe.setHouseId(houseId);
+        subscribe.setStatus(HouseSubscribeStatus.IN_ORDER_LIST.getValue());
+        subscribe.setAdminId(house.getAdminId());
+        subscribeRespository.save(subscribe);
+        return ServiceResult.success();
+    }
+
+    @Override
+    public ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> querySubscribeList(
+            HouseSubscribeStatus status,
+            int start,
+            int size) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        Pageable pageable = new PageRequest(start / size, size, new Sort(Sort.Direction.DESC, "createTime"));
+
+        Page<HouseSubscribe> page = subscribeRespository.findAllByUserIdAndStatus(userId, status.getValue(), pageable);
+
+        return wrapper(page);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult subscribe(Long houseId, Date orderTime, String telephone, String desc) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(houseId, userId);
+        if (subscribe == null) {
+            return new ServiceResult(false, "无预约记录");
+        }
+
+        if (subscribe.getStatus() != HouseSubscribeStatus.IN_ORDER_LIST.getValue()) {
+            return new ServiceResult(false, "无法预约");
+        }
+
+        subscribe.setStatus(HouseSubscribeStatus.IN_ORDER_TIME.getValue());
+        subscribe.setLastUpdateTime(new Date());
+        subscribe.setTelephone(telephone);
+        subscribe.setDesc(desc);
+        subscribe.setOrderTime(orderTime);
+        subscribeRespository.save(subscribe);
+        return ServiceResult.success();
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult cancelSubscribe(Long houseId) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndUserId(houseId, userId);
+        if (subscribe == null) {
+            return new ServiceResult(false, "无预约记录");
+        }
+
+        subscribeRespository.delete(subscribe.getId());
+        return ServiceResult.success();
+    }
+
+    @Override
+    public ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> findSubscribeList(int start, int size) {
+        Long userId = LoginUserUtil.getLoginUserId();
+        Pageable pageable = new PageRequest(start / size, size, new Sort(Sort.Direction.DESC, "orderTime"));
+
+        Page<HouseSubscribe> page = subscribeRespository.findAllByAdminIdAndStatus(userId, HouseSubscribeStatus.IN_ORDER_TIME.getValue(), pageable);
+
+        return wrapper(page);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult finishSubscribe(Long houseId) {
+        Long adminId = LoginUserUtil.getLoginUserId();
+        HouseSubscribe subscribe = subscribeRespository.findByHouseIdAndAdminId(houseId, adminId);
+        if (subscribe == null) {
+            return new ServiceResult(false, "无预约记录");
+        }
+
+        subscribeRespository.updateStatus(subscribe.getId(), HouseSubscribeStatus.FINISH.getValue());
+        houseRepository.updateWatchTimes(houseId);
+        return ServiceResult.success();
+    }
+
+    private ServiceMultiResult<Pair<HouseDTO, HouseSubscribeDTO>> wrapper(Page<HouseSubscribe> page) {
+        List<Pair<HouseDTO, HouseSubscribeDTO>> result = new ArrayList<>();
+
+        if (page.getSize() < 1) {
+            return new ServiceMultiResult<>(Math.toIntExact(page.getTotalElements()), result);
+        }
+
+        List<HouseSubscribeDTO> subscribeDTOS = new ArrayList<>();
+        List<Long> houseIds = new ArrayList<>();
+        page.forEach(houseSubscribe -> {
+            subscribeDTOS.add(modelMapper.map(houseSubscribe, HouseSubscribeDTO.class));
+            houseIds.add(houseSubscribe.getHouseId());
+        });
+
+        Map<Long, HouseDTO> idToHouseMap = new HashMap<>();
+        Iterable<House> houses = houseRepository.findAll(houseIds);
+        houses.forEach(house -> {
+            idToHouseMap.put(house.getId(), modelMapper.map(house, HouseDTO.class));
+        });
+
+        for (HouseSubscribeDTO subscribeDTO : subscribeDTOS) {
+            Pair<HouseDTO, HouseSubscribeDTO> pair = Pair.of(idToHouseMap.get(subscribeDTO.getHouseId()), subscribeDTO);
+            result.add(pair);
+        }
+
+        return new ServiceMultiResult<>(Math.toIntExact(page.getTotalElements()), result);
     }
 
 
