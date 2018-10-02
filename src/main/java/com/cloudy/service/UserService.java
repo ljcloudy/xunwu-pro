@@ -10,4 +10,6 @@ public interface UserService {
     User findByName(String name);
 
     ServiceResult<UserDTO> findById(Long adminId);
+
+    ServiceResult modifyUserProfile(String profile, String value);
 }

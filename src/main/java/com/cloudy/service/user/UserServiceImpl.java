@@ -1,5 +1,6 @@
 package com.cloudy.service.user;
 
+import com.cloudy.base.LoginUserUtil;
 import com.cloudy.entity.Role;
 import com.cloudy.entity.User;
 import com.cloudy.repository.RoleRepository;
@@ -10,10 +11,13 @@ import com.cloudy.web.dto.UserDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +35,7 @@ public class UserServiceImpl implements UserService {
     private RoleRepository roleRepository;
     @Autowired
     private ModelMapper modelMapper;
+    private final Md5PasswordEncoder passwordEncoder = new Md5PasswordEncoder();
 
     @Override
     public User findByName(String name) {
@@ -58,5 +63,35 @@ public class UserServiceImpl implements UserService {
         }
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
         return ServiceResult.of(userDTO);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResult modifyUserProfile(String profile, String value) {
+        ServiceResult result = new ServiceResult(true);
+
+        Long userId = LoginUserUtil.getLoginUserId();
+
+        if (StringUtils.isEmpty(value)) {
+            result.setSuccess(false);
+            result.setMessage("属性不能为空！");
+            return result;
+        }
+        switch (profile) {
+            case "name":
+                userRepository.updateUserName(userId, value);
+                break;
+            case "email":
+                userRepository.updateEmail(userId, value);
+                break;
+            case "password":
+                userRepository.updatePassword(userId, this.passwordEncoder.encodePassword(value, userId));
+                break;
+            default:
+                return new ServiceResult(false,"不支持的属性");
+
+        }
+
+        return result;
     }
 }

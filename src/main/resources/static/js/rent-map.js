@@ -172,7 +172,7 @@ function drawRegion(map, regionList) {
 
         // 搜索信息提示框
         var searchInfoWindow = new BMapLib.SearchInfoWindow(map, content, {
-            title: customPoi.title, // 标题
+           title: customPoi.title, // 标题
             width: 290,
             height: 60,
             panel: "panel", // 搜索结果面板
